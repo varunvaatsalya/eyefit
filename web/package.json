@@ -7,7 +7,8 @@
     "build": "next build",
     "start": "next start",
     "lint": "eslint",
-    "seed": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON scripts/seed.mjs"
+    "seed": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON scripts/seed.mjs",
+    "check-db": "node --disable-warning=MODULE_TYPELESS_PACKAGE_JSON scripts/check-db.mjs"
   },
   "dependencies": {
     "@base-ui/react": "^1.9.0",

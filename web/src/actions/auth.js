@@ -18,8 +18,22 @@ export async function login(_prev, formData) {
   const parsed = LoginSchema.safeParse(Object.fromEntries(formData));
   if (!parsed.success) return { error: parsed.error.issues[0].message };
 
-  await connectDB();
-  const user = await User.findOne({ username: parsed.data.username.toLowerCase(), isActive: true }).lean();
+  // Clear setup errors instead of a generic crash (helps on first deploy).
+  if (!process.env.MONGODB_URI) return { error: "Server setup: MONGODB_URI is not set (add it in Vercel → Environment Variables)." };
+  if (!process.env.SESSION_SECRET) return { error: "Server setup: SESSION_SECRET is not set (add it in Vercel → Environment Variables)." };
+
+  let user;
+  try {
+    await connectDB();
+    user = await User.findOne({ username: parsed.data.username.toLowerCase(), isActive: true }).lean();
+    if (!user && (await User.estimatedDocumentCount()) === 0) {
+      return { error: "Database is empty. Run `npm run seed` against this database first." };
+    }
+  } catch (e) {
+    console.error("login: database error", e);
+    return { error: "Cannot reach the database. Check MONGODB_URI and Atlas Network Access (allow 0.0.0.0/0)." };
+  }
+
   if (!user || !(await bcrypt.compare(parsed.data.password, user.passwordHash))) {
     return { error: "Wrong username or password" };
   }
