@@ -1,4 +1,5 @@
-import { Glasses, Store, Receipt, Boxes } from "lucide-react";
+import Link from "next/link";
+import { Glasses, Store, Receipt, Boxes, ArrowLeft } from "lucide-react";
 import { LoginForm } from "./login-form";
 
 export const metadata = { title: "Login" };
@@ -30,6 +31,9 @@ export default function LoginPage() {
 
       <div className="flex items-center justify-center p-6">
         <div className="w-full max-w-sm space-y-8">
+          <Link href="/" className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground">
+            <ArrowLeft className="size-4" /> Back to website
+          </Link>
           <div className="space-y-2">
             <div className="flex items-center gap-2 text-lg font-semibold lg:hidden">
               <Glasses className="size-5 text-primary" /> EyeFit

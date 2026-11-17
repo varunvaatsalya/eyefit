@@ -4,9 +4,6 @@ const nextConfig = {
   partialPrefetching: true,
   devIndicators: { position: "bottom-right" },
   serverExternalPackages: ["mongoose"],
-  async redirects() {
-    return [{ source: "/", destination: "/dashboard", permanent: false }];
-  },
   turbopack: {
     rules: {
       "*.css": {

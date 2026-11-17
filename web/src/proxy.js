@@ -2,10 +2,13 @@ import { NextResponse } from "next/server";
 import { jwtVerify } from "jose";
 
 const SESSION_COOKIE = "eyefit_session";
+// Public website pages: open to everyone, logged in or not.
+const PUBLIC_PATHS = new Set(["/", "/contact"]);
 
 // Optimistic auth check only. Real authorization happens in the Data Access Layer (lib/auth.js).
 export async function proxy(request) {
   const { pathname } = request.nextUrl;
+  if (PUBLIC_PATHS.has(pathname)) return NextResponse.next();
   const token = request.cookies.get(SESSION_COOKIE)?.value;
   let valid = false;
   if (token) {

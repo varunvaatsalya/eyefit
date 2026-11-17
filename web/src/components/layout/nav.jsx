@@ -2,7 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { Home, ReceiptText, Users, Boxes, Plus, Megaphone, Settings, BarChart3, ChevronDown, LayoutGrid } from "lucide-react";
+import { Home, ReceiptText, Users, Boxes, Plus, Megaphone, Settings, BarChart3, ChevronDown, LayoutGrid, Inbox } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Kbd } from "@/components/kbd";
 import {
@@ -19,6 +19,7 @@ export const NAV = [
 /** Secondary sections live under "More" so the bar stays short as the app grows. */
 function moreItems({ isOwner, canManage }) {
   return [
+    { href: "/enquiries", label: "Enquiries", icon: Inbox, hint: "Website bookings" },
     canManage && { href: "/marketing", label: "Marketing", icon: Megaphone, hint: "WhatsApp campaigns" },
     { href: "#", label: "Reports", icon: BarChart3, hint: "Coming soon", disabled: true },
     isOwner && { href: "/settings", label: "Settings", icon: Settings, hint: "Stores & staff" },

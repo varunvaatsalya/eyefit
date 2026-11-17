@@ -217,6 +217,21 @@ const InvoiceSchema = new Schema(
   { timestamps: true }
 );
 
+/* ---------------------------- Enquiry ---------------------------- */
+// Leads from the public website (eye-test bookings, frame / lens enquiries).
+const EnquirySchema = new Schema(
+  {
+    name: { type: String, required: true },
+    mobile: { type: String, required: true },
+    storeId: { type: ObjectId, ref: "Store" }, // null = any store
+    reason: { type: String, enum: ["eyetest", "frames", "contact_lens", "repair", "other"], default: "eyetest" },
+    preferredDate: Date,
+    message: String,
+    status: { type: String, enum: ["new", "contacted", "closed"], default: "new", index: true },
+  },
+  { timestamps: true }
+);
+
 /* ---------------------------- Counter ---------------------------- */
 const CounterSchema = new Schema({ _id: String, seq: { type: Number, default: 0 } });
 
@@ -230,6 +245,7 @@ export const Inventory = defineModel("Inventory", InventorySchema);
 export const StockMovement = defineModel("StockMovement", StockMovementSchema);
 export const Invoice = defineModel("Invoice", InvoiceSchema);
 export const Counter = defineModel("Counter", CounterSchema);
+export const Enquiry = defineModel("Enquiry", EnquirySchema);
 
 export async function nextSequence(key, session) {
   const doc = await Counter.findOneAndUpdate(

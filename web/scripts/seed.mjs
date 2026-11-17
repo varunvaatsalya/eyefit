@@ -4,7 +4,7 @@ import { config } from "dotenv";
 import mongoose from "mongoose";
 import bcrypt from "bcryptjs";
 import {
-  Store, User, Doctor, Customer, Prescription, Product, Inventory, StockMovement, Invoice, Counter,
+  Store, User, Doctor, Customer, Prescription, Product, Inventory, StockMovement, Invoice, Counter, Enquiry,
 } from "../src/models/index.js";
 import { calcTotals } from "../src/lib/billing.js";
 
@@ -36,7 +36,7 @@ async function main() {
   await mongoose.connect(uri);
   console.log("Connected. Clearing old data…");
   await Promise.all(
-    [Store, User, Doctor, Customer, Prescription, Product, Inventory, StockMovement, Invoice, Counter].map((M) =>
+    [Store, User, Doctor, Customer, Prescription, Product, Inventory, StockMovement, Invoice, Counter, Enquiry].map((M) =>
       M.deleteMany({})
     )
   );
@@ -316,6 +316,14 @@ async function main() {
   await Customer.bulkWrite(
     [...lastVisit.entries()].map(([id, d]) => ({ updateOne: { filter: { _id: id }, update: { $set: { lastVisitAt: d } } } }))
   );
+
+  await Enquiry.insertMany([
+    { name: "Pooja Rastogi", mobile: "9839012345", storeId: stores[0]._id, reason: "eyetest", preferredDate: new Date(Date.now() + 86400000), message: "For me and my daughter (8 yrs).", createdAt: daysAgo(0, 9) },
+    { name: "Vivek Tandon", mobile: "9415098765", reason: "frames", message: "Do you have Ray-Ban Clubmaster in stock?", createdAt: daysAgo(0, 8) },
+    { name: "Sana Qureshi", mobile: "7007654321", storeId: stores[2]._id, reason: "contact_lens", message: "Need monthly toric lenses.", createdAt: daysAgo(1) },
+    { name: "Ramesh Gupta", mobile: "9935011223", storeId: stores[1]._id, reason: "eyetest", preferredDate: new Date(Date.now() + 2 * 86400000), status: "contacted", createdAt: daysAgo(2) },
+    { name: "Neelam Arora", mobile: "8299334455", reason: "repair", message: "Frame hinge broke.", status: "closed", createdAt: daysAgo(5) },
+  ]);
 
   console.log(`Seeded: ${stores.length} stores, ${users.length} users, ${productDocs.length} products, ${customerDocs.length} customers, ${prescriptionDocs.length} prescriptions, ${invoices.length} invoices`);
   console.log("\nLogins:\n  owner / owner123   (all stores)\n  ef1 / staff123     (Main Market, manager)\n  ef2 / staff123     (Station Road, staff)\n  ef3 / staff123     (City Mall, staff)");

@@ -150,7 +150,7 @@ async function Dashboard() {
               <Store className="size-3.5" /> {ctx.activeStore ? ctx.activeStore.name : "All stores"} · {format(now, "EEEE, dd MMM")}
             </p>
             <h1 className="text-xl font-semibold tracking-tight md:text-2xl">
-              {greeting}, {ctx.user.name.split(" ")[0]} 👓
+              {greeting}, {ctx.user.name.split(" ")[0]}
             </h1>
             <p className="text-sm text-primary-foreground/75">Here’s how the store is doing today.</p>
           </div>
