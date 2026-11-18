@@ -12,7 +12,7 @@ export const metadata = { title: "New Sale" };
 export default function NewSalePage({ searchParams }) {
   return (
     <div className="space-y-3">
-      <PageHeader title="New Sale" description="Customer → eye test → items → payment. Everything on one screen." />
+      <PageHeader title="New Sale" />
       <Suspense fallback={<SaleSkeleton />}>
         <NewSale searchParams={searchParams} />
       </Suspense>

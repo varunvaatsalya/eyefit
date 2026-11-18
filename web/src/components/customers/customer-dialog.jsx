@@ -7,6 +7,11 @@ import { toast } from "sonner";
 import { saveCustomer } from "@/actions/customers";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { SuggestInput, INPUT_CLASS } from "@/components/ui/suggest-input";
+import { handleEnterNav } from "@/lib/enter-nav";
+
+const DOCTORS = ["EYE FIT (Self)", "Dr. S. K. Mishra", "Dr. Neha Agarwal", "Dr. R. P. Gupta"];
+const CATEGORIES = ["Regular", "VIP", "Corporate"];
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -85,7 +90,7 @@ export function CustomerDialog({ open, onOpenChange, customer, onSaved, redirect
           <DialogTitle>{customer ? "Edit customer" : "Add customer"}</DialogTitle>
           <DialogDescription>Name and mobile number are required. Everything else is optional.</DialogDescription>
         </DialogHeader>
-        <form onSubmit={submit} className="grid gap-4 sm:grid-cols-2">
+        <form onSubmit={submit} onKeyDown={handleEnterNav} className="grid gap-4 sm:grid-cols-2">
           <Field label="Mobile number *" error={errors.mobile}>
             <Input value={form.mobile} onChange={set("mobile")} inputMode="numeric" maxLength={14} autoFocus placeholder="10-digit mobile" />
           </Field>
@@ -110,26 +115,20 @@ export function CustomerDialog({ open, onOpenChange, customer, onSaved, redirect
             <Input type="email" value={form.email} onChange={set("email")} />
           </Field>
           <Field label="Referred by (doctor)">
-            <Input value={form.referDoctor} onChange={set("referDoctor")} list="doctor-list" placeholder="EYE FIT (Self)" />
-            <datalist id="doctor-list">
-              {["EYE FIT (Self)", "Dr. S. K. Mishra", "Dr. Neha Agarwal", "Dr. R. P. Gupta"].map((d) => <option key={d} value={d} />)}
-            </datalist>
+            <SuggestInput value={form.referDoctor} onChange={set("referDoctor")} options={DOCTORS} openOnFocus placeholder="EYE FIT (Self)" className={INPUT_CLASS} />
           </Field>
           <Field label="Category">
-            <Input value={form.category} onChange={set("category")} list="category-list" placeholder="Regular / VIP" />
-            <datalist id="category-list">
-              <option value="Regular" /><option value="VIP" /><option value="Corporate" />
-            </datalist>
+            <SuggestInput value={form.category} onChange={set("category")} options={CATEGORIES} openOnFocus placeholder="Regular / VIP" className={INPUT_CLASS} />
           </Field>
           <Field label="Address" className="sm:col-span-2">
             <Input value={form.address} onChange={set("address")} />
           </Field>
           <Field label="Remark" className="sm:col-span-2">
-            <Textarea value={form.remark} onChange={set("remark")} rows={2} />
+            <Textarea data-enter-skip value={form.remark} onChange={set("remark")} rows={2} />
           </Field>
           <DialogFooter className="sm:col-span-2">
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>Cancel</Button>
-            <Button type="submit" disabled={pending}>
+            <Button data-enter-final type="submit" disabled={pending}>
               {pending && <Loader2 className="animate-spin" />}
               {customer ? "Save changes" : "Add customer"}
             </Button>

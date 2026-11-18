@@ -2,13 +2,15 @@
 
 import { useCallback, useEffect, useMemo, useRef, useState, useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { format } from "date-fns";
-import { Copy, Eye, EyeOff, Loader2, Minus, Plus, Printer, Save, X, ShoppingCart, User, Glasses, Wallet } from "lucide-react";
+import { format, parse, startOfToday } from "date-fns";
+import { Copy, Eye, EyeOff, Loader2, Minus, Plus, Printer, Save, X, ShoppingCart, User, Glasses, Wallet, CalendarDays } from "lucide-react";
 import { toast } from "sonner";
 import { createSale } from "@/actions/sales";
 import { getCustomerForSale } from "@/actions/customers";
 import { Button } from "@/components/ui/button";
 import { Kbd } from "@/components/kbd";
+import { Calendar } from "@/components/ui/calendar";
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/ui/popover";
 import { RxForm, EMPTY_RX, rxFromSaved, rxIsEmpty } from "@/components/rx/rx-form";
 import { RxView } from "@/components/rx/rx-view";
 import { CustomerPicker } from "./customer-picker";
@@ -19,6 +21,7 @@ import { formatDate, formatINR } from "@/lib/format";
 import { cn } from "@/lib/utils";
 import { WhatsAppIcon } from "@/components/whatsapp/whatsapp-icon";
 import { billMessage, waLink } from "@/lib/whatsapp";
+import { handleEnterNav } from "@/lib/enter-nav";
 
 let uid = 0;
 const key = () => `l${++uid}`;
@@ -40,12 +43,13 @@ export function SaleForm({ storeName, initialCustomer }) {
 
   const [rxMode, setRxMode] = useState(initialCustomer?.lastRx ? "last" : "none"); // none | last | new
   const [rx, setRx] = useState(EMPTY_RX);
+  const [rxFocus, setRxFocus] = useState(false); // focus first Rx box when user opens "New"
 
   const [items, setItems] = useState([]);
   const [extraDiscount, setExtraDiscount] = useState("");
   const [payments, setPayments] = useState([{ mode: "cash", amount: "" }]);
   const [paymentTouched, setPaymentTouched] = useState(false);
-  const [deliveryDays, setDeliveryDays] = useState(null);
+  const [deliveryDate, setDeliveryDate] = useState(null); // yyyy-MM-dd chosen by staff (null = automatic)
   const [deliverNow, setDeliverNow] = useState(null);
   const [notes, setNotes] = useState("");
   const [waBill, setWaBill] = useState(true);
@@ -53,7 +57,8 @@ export function SaleForm({ storeName, initialCustomer }) {
 
   const totals = useMemo(() => calcTotals(items, extraDiscount), [items, extraDiscount]);
   const needsWorkshop = items.some((i) => i.category === "lens");
-  const days = deliveryDays ?? (needsWorkshop ? 3 : 0);
+  // lens orders default to 3 days, ready items to today
+  const dueDate = deliveryDate ?? addDays(needsWorkshop ? 3 : 0);
   const delivered = deliverNow ?? !needsWorkshop;
 
   const effectivePayments = paymentTouched ? payments : [{ ...payments[0], amount: totals.grandTotal }];
@@ -70,6 +75,8 @@ export function SaleForm({ storeName, initialCustomer }) {
     setNewCustomer(null);
     setRxMode(data.lastRx ? "last" : "none");
     setRx(EMPTY_RX);
+    // keyboard flow: existing customer picked → straight to product search
+    setTimeout(() => productInputRef.current?.focus(), 0);
   };
   const startNewCustomer = (nc) => {
     setNewCustomer(nc);
@@ -139,7 +146,7 @@ export function SaleForm({ storeName, initialCustomer }) {
     setExtraDiscount("");
     setPayments([{ mode: "cash", amount: "" }]);
     setPaymentTouched(false);
-    setDeliveryDays(null);
+    setDeliveryDate(null);
     setDeliverNow(null);
     setNotes("");
     setWaBill(true);
@@ -175,7 +182,7 @@ export function SaleForm({ storeName, initialCustomer }) {
           items: items.map(({ key: _k, stock: _s, custom: _c, ...i }) => i),
           extraDiscount: Number(extraDiscount) || 0,
           payments: effectivePayments.map((p) => ({ mode: p.mode, amount: Number(p.amount) || 0 })),
-          deliveryDate: addDays(days),
+          deliveryDate: dueDate,
           deliveryStatus: delivered ? "delivered" : "pending",
           notes,
           whatsapp: { sendBill: waBill, dueReminder: waReminder && balance > 0 },
@@ -198,7 +205,7 @@ export function SaleForm({ storeName, initialCustomer }) {
               paidTotal: paid,
               balance,
               deliveryStatus: delivered ? "delivered" : "pending",
-              deliveryDate: addDays(days),
+              deliveryDate: dueDate,
             },
             storeName
           );
@@ -215,7 +222,7 @@ export function SaleForm({ storeName, initialCustomer }) {
       });
     },
     // eslint-disable-next-line react-hooks/exhaustive-deps
-    [selected, newCustomer, items, rxMode, rx, extraDiscount, effectivePayments, days, delivered, notes, waBill, waReminder, totals, paid, balance, storeName]
+    [selected, newCustomer, items, rxMode, rx, extraDiscount, effectivePayments, dueDate, delivered, notes, waBill, waReminder, totals, paid, balance, storeName]
   );
 
   useEffect(() => {
@@ -238,7 +245,7 @@ export function SaleForm({ storeName, initialCustomer }) {
 
   return (
     <>
-      <div className="grid grid-cols-[minmax(0,1fr)] items-start gap-3 lg:grid-cols-[minmax(0,1fr)_300px] xl:grid-cols-[minmax(0,5fr)_minmax(0,6fr)_310px]">
+      <div data-enter-nav onKeyDown={handleEnterNav} className="grid grid-cols-[minmax(0,1fr)] items-start gap-3 lg:grid-cols-[minmax(0,1fr)_300px] xl:grid-cols-[minmax(0,5fr)_minmax(0,6fr)_310px]">
         {/* ============ CUSTOMER DETAILS ============ */}
         <Panel icon={User} title="Customer details" className="lg:col-start-1 lg:row-start-1">
           <CustomerPicker
@@ -257,7 +264,7 @@ export function SaleForm({ storeName, initialCustomer }) {
               <div className="inline-flex rounded-full bg-muted p-0.5">
                 <Seg active={rxMode === "none"} onClick={() => setRxMode("none")}><EyeOff className="size-3" /> None</Seg>
                 {lastRx && <Seg active={rxMode === "last"} onClick={() => setRxMode("last")}>Last · {formatDate(lastRx.visitDate, "dd MMM yy")}</Seg>}
-                <Seg active={rxMode === "new"} onClick={() => setRxMode("new")} disabled={!hasCustomer}><Plus className="size-3" /> New</Seg>
+                <Seg active={rxMode === "new"} onClick={() => { setRxMode("new"); setRxFocus(true); }} disabled={!hasCustomer}><Plus className="size-3" /> New</Seg>
               </div>
             </div>
             {rxMode === "none" && (
@@ -268,12 +275,12 @@ export function SaleForm({ storeName, initialCustomer }) {
             {rxMode === "last" && lastRx && (
               <div className="space-y-2">
                 <RxView rx={lastRx} dense />
-                <Button variant="outline" size="xs" onClick={() => { setRx(rxFromSaved(lastRx)); setRxMode("new"); }}>
+                <Button variant="outline" size="xs" onClick={() => { setRx(rxFromSaved(lastRx)); setRxMode("new"); setRxFocus(true); }}>
                   <Copy /> Edit as new eye test
                 </Button>
               </div>
             )}
-            {rxMode === "new" && <RxForm value={rx} onChange={setRx} compact />}
+            {rxMode === "new" && <RxForm value={rx} onChange={setRx} compact autoFocus={rxFocus} />}
           </div>
         </Panel>
 
@@ -294,6 +301,11 @@ export function SaleForm({ storeName, initialCustomer }) {
           }
         >
           <ProductPicker inputRef={productInputRef} onAdd={addProduct} onCustom={addCustom} />
+          {items.length > 0 && (
+            <p className="mt-1.5 hidden text-[11px] text-muted-foreground lg:block">
+              Done adding? Press <Kbd className="h-4">Enter</Kbd> on the empty search to jump to payment, then <Kbd className="h-4">Enter</Kbd> again to save.
+            </p>
+          )}
           <div className="mt-3 space-y-1.5">
             {items.length === 0 ? (
               <div className="flex flex-col items-center justify-center gap-1.5 rounded-xl border border-dashed py-8 text-center text-xs text-muted-foreground">
@@ -321,7 +333,7 @@ export function SaleForm({ storeName, initialCustomer }) {
             <Row label="GST" value={formatINR(totals.gstTotal)} />
             <div className="flex items-center justify-between">
               <span className="text-muted-foreground">Extra discount ₹</span>
-              <input value={extraDiscount} onChange={(e) => setExtraDiscount(e.target.value.replace(/[^\d.]/g, ""))} placeholder="0" className="h-7 w-20 rounded-lg bg-input/50 px-2 text-right tabular outline-none focus:ring-3 focus:ring-ring/30" />
+              <input data-enter-skip value={extraDiscount} onChange={(e) => setExtraDiscount(e.target.value.replace(/[^\d.]/g, ""))} placeholder="0" className="h-7 w-20 rounded-lg bg-input/50 px-2 text-right tabular outline-none focus:ring-3 focus:ring-ring/30" />
             </div>
             {totals.roundOff !== 0 && <Row label="Round off" value={formatINR(totals.roundOff)} />}
           </div>
@@ -367,9 +379,9 @@ export function SaleForm({ storeName, initialCustomer }) {
             {!delivered && (
               <div className="flex flex-wrap items-center gap-1">
                 {[["Today", 0], ["+1 day", 1], ["+3 days", 3], ["+1 week", 7]].map(([l, n]) => (
-                  <Chip key={l} active={days === n} onClick={() => setDeliveryDays(n)}>{l}</Chip>
+                  <Chip key={l} active={dueDate === addDays(n)} onClick={() => setDeliveryDate(addDays(n))}>{l}</Chip>
                 ))}
-                <span className="ml-auto text-[11px] text-muted-foreground">{formatDate(addDays(days), "EEE dd MMM")}</span>
+                <DeliveryDatePicker value={dueDate} onChange={setDeliveryDate} />
               </div>
             )}
             <input value={notes} onChange={(e) => setNotes(e.target.value)} placeholder="Note for workshop / bill" className="h-8 w-full rounded-lg bg-input/50 px-2.5 text-xs outline-none focus:ring-3 focus:ring-ring/30" />
@@ -386,7 +398,7 @@ export function SaleForm({ storeName, initialCustomer }) {
           </div>
 
           <div className="mt-3 hidden grid-cols-2 gap-2 lg:grid">
-            <Button variant="outline" onClick={() => save(false)} disabled={pending}>
+            <Button data-enter-final variant="outline" onClick={() => save(false)} disabled={pending}>
               {pending ? <Loader2 className="animate-spin" /> : <Save />} Save <Kbd className="h-4">Ctrl S</Kbd>
             </Button>
             <Button onClick={() => save(true)} disabled={pending}>
@@ -471,7 +483,7 @@ function NumField({ label, value, onChange, className }) {
   return (
     <label className={cn("flex h-6 items-center gap-1 rounded-full bg-background pr-1 pl-2 ring-1 ring-foreground/10 focus-within:ring-3 focus-within:ring-ring/30", className)}>
       <span className="shrink-0 text-[10px] text-muted-foreground">{label}</span>
-      <input value={value} onChange={(e) => onChange(e.target.value.replace(/[^\d.]/g, ""))} onFocus={(e) => e.target.select()} inputMode="decimal" className="w-full min-w-0 bg-transparent text-right text-xs tabular outline-none" />
+      <input data-enter-skip value={value} onChange={(e) => onChange(e.target.value.replace(/[^\d.]/g, ""))} onFocus={(e) => e.target.select()} inputMode="decimal" className="w-full min-w-0 bg-transparent text-right text-xs tabular outline-none" />
     </label>
   );
 }
@@ -498,6 +510,35 @@ function Chip({ active, onClick, children }) {
     <button type="button" onClick={onClick} className={cn("rounded-full border px-2 py-px text-[11px]", active ? "border-primary bg-primary/10 text-primary" : "text-muted-foreground hover:bg-muted")}>
       {children}
     </button>
+  );
+}
+
+/** Pick any delivery date from a calendar (past dates disabled). */
+function DeliveryDatePicker({ value, onChange }) {
+  const [open, setOpen] = useState(false);
+  const date = parse(value, "yyyy-MM-dd", new Date());
+  return (
+    <Popover open={open} onOpenChange={setOpen}>
+      <PopoverTrigger
+        className="ml-auto inline-flex items-center gap-1 rounded-full border border-primary/30 bg-primary/5 px-2 py-px text-[11px] font-medium text-primary hover:bg-primary/10"
+        aria-label="Choose delivery date"
+      >
+        <CalendarDays className="size-3" /> {format(date, "EEE dd MMM")}
+      </PopoverTrigger>
+      <PopoverContent align="end" className="w-auto p-0">
+        <Calendar
+          mode="single"
+          selected={date}
+          defaultMonth={date}
+          disabled={{ before: startOfToday() }}
+          onSelect={(d) => {
+            if (!d) return;
+            onChange(format(d, "yyyy-MM-dd"));
+            setOpen(false);
+          }}
+        />
+      </PopoverContent>
+    </Popover>
   );
 }
 

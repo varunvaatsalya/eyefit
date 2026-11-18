@@ -7,6 +7,7 @@ import { savePrescription } from "@/actions/customers";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { RxForm, EMPTY_RX, rxFromSaved, rxIsEmpty } from "./rx-form";
+import { handleEnterNav } from "@/lib/enter-nav";
 
 export function RxDialog({ open, onOpenChange, customerId, lastRx }) {
   const [rx, setRx] = useState(EMPTY_RX);
@@ -28,12 +29,12 @@ export function RxDialog({ open, onOpenChange, customerId, lastRx }) {
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-3xl">
+      <DialogContent className="sm:max-w-3xl" data-enter-nav onKeyDown={handleEnterNav}>
         <DialogHeader>
           <DialogTitle>New eye test</DialogTitle>
           <DialogDescription>Type values directly, e.g. -1.25. They are formatted when you leave the box. Enter ADD and the near row fills itself.</DialogDescription>
         </DialogHeader>
-        <RxForm value={rx} onChange={setRx} />
+        <RxForm value={rx} onChange={setRx} autoFocus />
         <DialogFooter>
           {lastRx && (
             <Button type="button" variant="outline" className="mr-auto" onClick={() => setRx(rxFromSaved(lastRx))}>
@@ -41,7 +42,7 @@ export function RxDialog({ open, onOpenChange, customerId, lastRx }) {
             </Button>
           )}
           <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>Cancel</Button>
-          <Button type="button" onClick={save} disabled={pending}>
+          <Button data-enter-final type="button" onClick={save} disabled={pending}>
             {pending && <Loader2 className="animate-spin" />} Save eye test
           </Button>
         </DialogFooter>

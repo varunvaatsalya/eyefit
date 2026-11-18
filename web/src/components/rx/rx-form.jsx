@@ -1,6 +1,9 @@
 "use client";
 
 import { cn } from "@/lib/utils";
+import { SuggestInput } from "@/components/ui/suggest-input";
+
+const LENS_TYPES = ["Single Vision", "Blue Cut", "Anti-Glare", "Photochromic", "Progressive", "Bifocal", "Polarised", "High Index 1.67"];
 import { normalizePower } from "@/lib/format";
 import { SPH_VALUES, CYL_VALUES, ADD_VALUES, VA_VALUES, RX_TYPES, USAGE_OPTIONS } from "@/lib/constants";
 
@@ -49,39 +52,57 @@ const addPower = (sph, add) => {
   return normalizePower(String(a));
 };
 
-function Cell({ value, onChange, list, power, className, placeholder, ...props }) {
+const CELL =
+  "h-8 w-full min-w-0 rounded-lg border border-transparent bg-input/50 px-1 text-center font-mono text-xs tabular outline-none transition-colors placeholder:text-muted-foreground/50 focus:border-ring focus:bg-background focus:ring-3 focus:ring-ring/30";
+
+/** One Rx box. With `options` it shows a shadcn suggestion list (Enter picks + jumps to next box). */
+function Cell({ value, onChange, options, power, openOnFocus, className, placeholder, ...props }) {
+  const onBlur = props.onBlur ?? (power ? (e) => onChange(normalizePower(e.target.value)) : undefined);
+  if (options) {
+    return (
+      <SuggestInput
+        value={value ?? ""}
+        onChange={onChange}
+        options={options}
+        power={power}
+        openOnFocus={openOnFocus}
+        placeholder={placeholder}
+        className={cn(CELL, className)}
+        {...props}
+        onBlur={onBlur}
+      />
+    );
+  }
   return (
     <input
       value={value ?? ""}
-      list={list}
       placeholder={placeholder}
       onChange={(e) => onChange(e.target.value)}
-      onBlur={power ? (e) => onChange(normalizePower(e.target.value)) : undefined}
-      className={cn(
-        "h-8 w-full min-w-0 rounded-lg border border-transparent bg-input/50 px-1 text-center font-mono text-xs tabular outline-none transition-colors placeholder:text-muted-foreground/50 focus:border-ring focus:bg-background focus:ring-3 focus:ring-ring/30",
-        className
-      )}
+      className={cn(CELL, className)}
       autoComplete="off"
       {...props}
+      onBlur={onBlur}
     />
   );
 }
 
-function TextField({ label, value, onChange, placeholder }) {
+const TEXT =
+  "h-8 w-full rounded-lg border border-transparent bg-input/50 px-2.5 text-xs outline-none focus:border-ring focus:bg-background focus:ring-3 focus:ring-ring/30";
+
+function TextField({ label, value, onChange, placeholder, options }) {
   return (
     <label className="space-y-0.5">
       <span className="text-[11px] font-medium text-muted-foreground">{label}</span>
-      <input
-        value={value ?? ""}
-        placeholder={placeholder}
-        onChange={(e) => onChange(e.target.value)}
-        className="h-8 w-full rounded-lg border border-transparent bg-input/50 px-2.5 text-xs outline-none focus:border-ring focus:bg-background focus:ring-3 focus:ring-ring/30"
-      />
+      {options ? (
+        <SuggestInput value={value ?? ""} onChange={onChange} options={options} openOnFocus placeholder={placeholder} className={TEXT} />
+      ) : (
+        <input value={value ?? ""} placeholder={placeholder} onChange={(e) => onChange(e.target.value)} className={TEXT} />
+      )}
     </label>
   );
 }
 
-export function RxForm({ value, onChange, compact = false }) {
+export function RxForm({ value, onChange, compact = false, autoFocus = false }) {
   const rx = value ?? EMPTY_RX;
 
   const setEye = (side, row, field, v) => {
@@ -113,10 +134,6 @@ export function RxForm({ value, onChange, compact = false }) {
 
   return (
     <div className="space-y-3">
-      <datalist id="rx-sph">{SPH_VALUES.map((v) => <option key={v} value={v} />)}</datalist>
-      <datalist id="rx-cyl">{CYL_VALUES.map((v) => <option key={v} value={v} />)}</datalist>
-      <datalist id="rx-add">{ADD_VALUES.map((v) => <option key={v} value={v} />)}</datalist>
-      <datalist id="rx-va">{VA_VALUES.map((v) => <option key={v} value={v} />)}</datalist>
 
       <div className="flex flex-wrap items-center justify-between gap-2">
         <div className="inline-flex rounded-full bg-muted p-1">
@@ -184,16 +201,17 @@ export function RxForm({ value, onChange, compact = false }) {
                     </span>
                     <span className="text-[11px] text-muted-foreground">{sub === "Distance" ? "DV" : "NV"}</span>
                   </td>
-                  <td><Cell value={r.sph} list="rx-sph" power placeholder={nearPlaceholder} onChange={(v) => setEye(side, row, "sph", v)} /></td>
-                  <td><Cell value={r.cyl} list="rx-cyl" power onChange={(v) => setEye(side, row, "cyl", v)} /></td>
+                  <td><Cell value={r.sph} options={SPH_VALUES} power placeholder={nearPlaceholder} autoFocus={autoFocus && side === "right" && row === "dp"} onChange={(v) => setEye(side, row, "sph", v)} /></td>
+                  <td><Cell value={r.cyl} options={CYL_VALUES} power onChange={(v) => setEye(side, row, "cyl", v)} /></td>
                   <td><Cell value={r.axis} inputMode="numeric" maxLength={3} onChange={(v) => setEye(side, row, "axis", v.replace(/\D/g, ""))} /></td>
-                  <td><Cell value={r.va} list="rx-va" onChange={(v) => setEye(side, row, "va", v)} /></td>
+                  <td><Cell value={r.va} options={VA_VALUES} openOnFocus onChange={(v) => setEye(side, row, "va", v)} /></td>
                   {first ? (
                     <>
                       <td rowSpan={2} className="align-middle">
                         <Cell
                           value={eye.add}
-                          list="rx-add"
+                          options={ADD_VALUES}
+                          power
                           className="h-[4.2rem]"
                           onChange={(v) => setEye(side, null, "add", v)}
                           onBlur={(e) => onAddBlur(side, e.target.value)}
@@ -212,7 +230,7 @@ export function RxForm({ value, onChange, compact = false }) {
       </div>
 
       <div className={cn("grid gap-3", compact ? "grid-cols-2 sm:grid-cols-3" : "grid-cols-2 sm:grid-cols-3 lg:grid-cols-6")}>
-        <TextField label="Lens" placeholder="Blue cut, Progressive…" value={rx.lens} onChange={(v) => onChange({ ...rx, lens: v })} />
+        <TextField label="Lens" placeholder="Blue cut, Progressive…" options={LENS_TYPES} value={rx.lens} onChange={(v) => onChange({ ...rx, lens: v })} />
         <TextField label="Frame" value={rx.frame} onChange={(v) => onChange({ ...rx, frame: v })} />
         <TextField label="Shade / Tint" value={rx.shade} onChange={(v) => onChange({ ...rx, shade: v })} />
         <TextField label="Fitting height" value={rx.fittingHeight} onChange={(v) => onChange({ ...rx, fittingHeight: v })} />

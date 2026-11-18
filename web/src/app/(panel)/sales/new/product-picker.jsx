@@ -45,6 +45,11 @@ export function ProductPicker({ onAdd, onCustom, inputRef }) {
       e.preventDefault();
       setActive((a) => Math.max(0, a - 1));
     } else if (e.key === "Enter") {
+      // empty box + Enter = "done adding items" → let the form jump to payment
+      if (!q.trim()) {
+        setOpen(false);
+        return;
+      }
       e.preventDefault();
       // barcode scanners type fast and press Enter: do an exact lookup if results are stale
       if (pending || !results.length) {

@@ -6,6 +6,10 @@ import { toast } from "sonner";
 import { saveProduct } from "@/actions/inventory";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { SuggestInput, INPUT_CLASS } from "@/components/ui/suggest-input";
+import { handleEnterNav } from "@/lib/enter-nav";
+
+const MATERIALS = ["Acetate", "Metal", "TR90", "Titanium", "Ultem"];
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "@/components/ui/dialog";
@@ -71,7 +75,7 @@ export function ProductDialog({ open, onOpenChange, product, activeStoreName }) 
           <DialogTitle>{product ? "Edit product" : "Add product"}</DialogTitle>
           <DialogDescription>Products are shared by all stores. Stock is counted separately for each store.</DialogDescription>
         </DialogHeader>
-        <form onSubmit={submit} className="grid gap-4 sm:grid-cols-6">
+        <form onSubmit={submit} onKeyDown={handleEnterNav} className="grid gap-4 sm:grid-cols-6">
           <div className="flex flex-wrap gap-1.5 sm:col-span-6">
             {CATEGORIES.map((c) => (
               <button
@@ -102,11 +106,10 @@ export function ProductDialog({ open, onOpenChange, product, activeStoreName }) 
 
           {isFrameLike && (
             <>
-              <F label="Material" className="sm:col-span-2"><Input value={form.attributes.material} onChange={setAttr("material")} list="mat" /></F>
+              <F label="Material" className="sm:col-span-2"><SuggestInput value={form.attributes.material} onChange={(v) => setForm((f) => ({ ...f, attributes: { ...f.attributes, material: v } }))} options={MATERIALS} openOnFocus className={INPUT_CLASS} /></F>
               <F label="Colour" className="sm:col-span-2"><Input value={form.attributes.colour} onChange={setAttr("colour")} /></F>
               <F label="Shape" className="sm:col-span-1"><Input value={form.attributes.shape} onChange={setAttr("shape")} /></F>
               <F label="Size" className="sm:col-span-1"><Input value={form.attributes.size} onChange={setAttr("size")} placeholder="52-18-140" /></F>
-              <datalist id="mat">{["Acetate", "Metal", "TR90", "Titanium", "Ultem"].map((m) => <option key={m} value={m} />)}</datalist>
             </>
           )}
           {isLens && (
@@ -147,7 +150,7 @@ export function ProductDialog({ open, onOpenChange, product, activeStoreName }) 
 
           <DialogFooter className="sm:col-span-6">
             <Button type="button" variant="outline" onClick={() => onOpenChange(false)}>Cancel</Button>
-            <Button type="submit" disabled={pending}>
+            <Button data-enter-final type="submit" disabled={pending}>
               {pending && <Loader2 className="animate-spin" />}
               {product ? "Save changes" : "Add product"}
             </Button>

@@ -5,6 +5,8 @@ import { CheckCircle2, Loader2, Send } from "lucide-react";
 import { submitEnquiry } from "@/actions/enquiry";
 import { ENQUIRY_REASONS } from "@/lib/site";
 import { cn } from "@/lib/utils";
+import { handleEnterNav } from "@/lib/enter-nav";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 
 const input =
   "h-11 w-full rounded-xl border border-transparent bg-muted/60 px-4 text-sm outline-none transition focus:border-ring focus:bg-background focus:ring-3 focus:ring-ring/30";
@@ -13,6 +15,7 @@ export function ContactForm({ stores }) {
   const [state, action, pending] = useActionState(submitEnquiry, null);
   const v = state?.values ?? {};
   const e = state?.errors ?? {};
+  const storeItems = [{ value: "any", label: "Any store" }, ...stores.map((s) => ({ value: s.id, label: s.name }))];
 
   if (state?.ok) {
     return (
@@ -25,7 +28,7 @@ export function ContactForm({ stores }) {
   }
 
   return (
-    <form action={action} className="grid gap-4 sm:grid-cols-2">
+    <form action={action} onKeyDown={handleEnterNav} className="grid gap-4 sm:grid-cols-2">
       {/* honeypot for bots */}
       <input type="text" name="website" tabIndex={-1} autoComplete="off" className="hidden" aria-hidden="true" />
 
@@ -50,23 +53,27 @@ export function ContactForm({ stores }) {
       </Field>
 
       <Field label="Preferred store">
-        <select name="storeId" defaultValue={v.storeId ?? ""} className={input}>
-          <option value="">Any store</option>
-          {stores.map((s) => (
-            <option key={s.id} value={s.id}>{s.name}</option>
-          ))}
-        </select>
+        <Select name="storeId" items={storeItems} defaultValue={v.storeId || "any"}>
+          <SelectTrigger className="h-11 w-full rounded-xl bg-muted/60 px-4">
+            <SelectValue />
+          </SelectTrigger>
+          <SelectContent alignItemWithTrigger={false}>
+            {storeItems.map((it) => (
+              <SelectItem key={it.value} value={it.value}>{it.label}</SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
       </Field>
       <Field label="Preferred date (optional)">
         <input type="date" name="preferredDate" defaultValue={v.preferredDate} className={input} />
       </Field>
 
       <Field label="Message (optional)" className="sm:col-span-2">
-        <textarea name="message" defaultValue={v.message} rows={3} maxLength={500} className={cn(input, "h-auto py-3")} placeholder="e.g. Need progressive lenses for my father" />
+        <textarea data-enter-skip name="message" defaultValue={v.message} rows={3} maxLength={500} className={cn(input, "h-auto py-3")} placeholder="e.g. Need progressive lenses for my father" />
       </Field>
 
       <div className="flex flex-wrap items-center gap-3 sm:col-span-2">
-        <button type="submit" disabled={pending} className="inline-flex h-11 items-center gap-2 rounded-full bg-primary px-6 text-sm font-medium text-primary-foreground shadow-lg shadow-primary/20 transition hover:bg-primary/90 disabled:opacity-60">
+        <button data-enter-final type="submit" disabled={pending} className="inline-flex h-11 items-center gap-2 rounded-full bg-primary px-6 text-sm font-medium text-primary-foreground shadow-lg shadow-primary/20 transition hover:bg-primary/90 disabled:opacity-60">
           {pending ? <Loader2 className="size-4 animate-spin" /> : <Send className="size-4" />} Send request
         </button>
         <p className="text-xs text-muted-foreground">We reply within working hours. No spam, ever.</p>

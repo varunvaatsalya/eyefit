@@ -5,13 +5,14 @@ import { Loader2 } from "lucide-react";
 import { login } from "@/actions/auth";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { handleEnterNav } from "@/lib/enter-nav";
 import { Label } from "@/components/ui/label";
 
 export function LoginForm() {
   const [state, action, pending] = useActionState(login, null);
 
   return (
-    <form action={action} className="space-y-4">
+    <form action={action} onKeyDown={handleEnterNav} className="space-y-4">
       <div className="space-y-2">
         <Label htmlFor="username">Username</Label>
         <Input id="username" name="username" autoComplete="username" autoFocus required />

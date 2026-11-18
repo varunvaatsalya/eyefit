@@ -6,6 +6,8 @@ import {
 import { WhatsAppIcon } from "@/components/whatsapp/whatsapp-icon";
 import { getPublicStores } from "@/lib/public-data";
 import { StoreCard } from "./store-card";
+import { EyeChart } from "./eye-chart";
+import { FrameShapes, LensTech } from "./showcase";
 import { SITE, SERVICES, BRANDS, STEPS, TESTIMONIALS, STATS } from "@/lib/site";
 
 const SERVICE_ICONS = { eye: Eye, glasses: Glasses, contact: CircleDot, sun: Sun, baby: Baby, wrench: Wrench };
@@ -24,10 +26,10 @@ export default async function HomePage() {
               <Sparkles className="size-3.5" /> Free eye test with every frame
             </span>
             <h1 className="text-4xl leading-[1.1] font-semibold tracking-tight md:text-5xl">
-              See the world <span className="text-primary">clearly</span>, look great doing it.
+              Blurry world? <br className="hidden sm:block" /><span className="bg-gradient-to-r from-primary to-chart-3 bg-clip-text text-transparent">Let’s fix that.</span>
             </h1>
             <p className="max-w-md text-lg text-muted-foreground">
-              Computerised eye tests, 1,000+ frames from Ray-Ban, Titan, Vogue and more, and lenses ready in as little as 48 hours, at 3 stores across the city.
+              Free computerised eye test, 1,000+ frames from Ray-Ban, Titan, Vogue and more, and lenses ready in as little as 48 hours. 3 stores across the city.
             </p>
             <div className="flex flex-wrap gap-3">
               <Link href="/contact#book" className="inline-flex h-11 items-center gap-2 rounded-full bg-primary px-6 text-sm font-medium text-primary-foreground shadow-lg shadow-primary/20 transition hover:bg-primary/90">
@@ -45,40 +47,21 @@ export default async function HomePage() {
             </div>
           </div>
 
-          {/* visual */}
+          {/* visual: interactive eye chart */}
           <div className="relative mx-auto w-full max-w-md">
-            <div className="relative aspect-[4/3.4] overflow-hidden rounded-[2rem] bg-primary p-6 text-primary-foreground shadow-2xl shadow-primary/30">
-              <div className="absolute -top-16 -right-16 size-56 rounded-full bg-white/10" />
-              <div className="absolute -bottom-20 -left-10 size-56 rounded-full bg-white/5" />
-              <svg viewBox="0 0 240 110" fill="none" stroke="currentColor" strokeWidth="5" strokeLinecap="round" strokeLinejoin="round" className="relative mx-auto mt-6 w-4/5 drop-shadow-xl" aria-hidden="true">
-                <path d="M8 40 L24 32" />
-                <path d="M232 40 L216 32" />
-                <rect x="24" y="30" width="84" height="62" rx="28" fill="rgb(255 255 255 / 0.12)" />
-                <rect x="132" y="30" width="84" height="62" rx="28" fill="rgb(255 255 255 / 0.12)" />
-                <path d="M108 50 Q120 38 132 50" />
-                <path d="M44 48 Q56 40 68 46" strokeWidth="3.5" opacity="0.7" />
-                <path d="M152 48 Q164 40 176 46" strokeWidth="3.5" opacity="0.7" />
-              </svg>
-              {/* mini prescription card */}
-              <div className="absolute inset-x-6 bottom-6 rounded-2xl bg-white p-3 text-foreground shadow-xl">
-                <div className="mb-2 flex items-center justify-between text-xs">
-                  <span className="font-semibold">Your prescription</span>
-                  <span className="rounded-full bg-emerald-500/10 px-2 py-0.5 font-medium text-emerald-700">Ready in 48 hrs</span>
-                </div>
-                <div className="grid grid-cols-4 gap-1 text-center font-mono text-[11px]">
-                  <span className="text-left font-sans text-muted-foreground">Eye</span><span className="text-muted-foreground">SPH</span><span className="text-muted-foreground">CYL</span><span className="text-muted-foreground">AXIS</span>
-                  <span className="text-left font-sans font-semibold text-primary">R</span><span>-1.25</span><span>-0.50</span><span>90</span>
-                  <span className="text-left font-sans font-semibold text-amber-700">L</span><span>-1.00</span><span>-0.25</span><span>85</span>
-                </div>
-              </div>
-            </div>
-            <div className="absolute -top-4 -left-4 flex items-center gap-2 rounded-2xl bg-background px-3 py-2 text-sm shadow-lg ring-1 ring-foreground/5 md:-left-8">
+            <div className="pointer-events-none absolute -inset-6 -z-10 rounded-[3rem] bg-gradient-to-br from-primary/25 via-transparent to-chart-2/25 blur-2xl" />
+            <EyeChart />
+            <div className="animate-float absolute -top-5 -left-4 flex items-center gap-2 rounded-2xl bg-background px-3 py-2 text-sm shadow-lg ring-1 ring-foreground/5 md:-left-10">
               <span className="flex size-8 items-center justify-center rounded-xl bg-primary/10 text-primary"><Timer className="size-4" /></span>
               <span><b className="block leading-tight">15 min</b><span className="text-xs text-muted-foreground">eye test</span></span>
             </div>
-            <div className="absolute top-1/3 -right-3 flex items-center gap-2 rounded-2xl bg-background px-3 py-2 text-sm shadow-lg ring-1 ring-foreground/5 md:-right-8">
+            <div className="animate-float absolute top-1/2 -right-3 hidden items-center sm:flex gap-2 rounded-2xl bg-background px-3 py-2 text-sm shadow-lg ring-1 ring-foreground/5 [animation-delay:1.2s] md:-right-12">
               <span className="flex size-8 items-center justify-center rounded-xl bg-[#25D366]/15 text-[#128C7E]"><WhatsAppIcon className="size-4" /></span>
               <span><b className="block leading-tight">Ready alert</b><span className="text-xs text-muted-foreground">on WhatsApp</span></span>
+            </div>
+            <div className="animate-float absolute -top-5 right-4 hidden items-center sm:flex gap-2 rounded-2xl bg-background px-3 py-2 text-sm shadow-lg ring-1 ring-foreground/5 [animation-delay:2.4s]">
+              <span className="flex size-8 items-center justify-center rounded-xl bg-amber-500/15 text-amber-700"><Star className="size-4 fill-current" /></span>
+              <span><b className="block leading-tight">4.9 rating</b><span className="text-xs text-muted-foreground">10,000+ families</span></span>
             </div>
           </div>
         </div>
@@ -97,7 +80,7 @@ export default async function HomePage() {
       </section>
 
       {/* ================= SERVICES ================= */}
-      <section id="services" className="scroll-mt-20 py-16">
+      <section id="services" className="reveal scroll-mt-20 py-16">
         <div className="mx-auto max-w-6xl px-4">
           <SectionTitle kicker="What we do" title="Complete eye care under one roof" text="From your first eye test to the perfect pair, our optometrists and stylists take care of everything." />
           <div className="mt-10 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
@@ -117,20 +100,36 @@ export default async function HomePage() {
         </div>
       </section>
 
-      {/* ================= BRANDS ================= */}
-      <section id="brands" className="scroll-mt-20 border-y bg-muted/40 py-10">
-        <div className="mx-auto max-w-6xl px-4">
-          <p className="text-center text-xs font-medium tracking-widest text-muted-foreground uppercase">Genuine brands, official warranty</p>
-          <div className="mt-6 flex flex-wrap items-center justify-center gap-x-8 gap-y-4">
-            {BRANDS.map((b) => (
-              <span key={b} className="text-lg font-semibold tracking-tight text-foreground/50 transition-colors hover:text-foreground md:text-xl">{b}</span>
+      {/* ================= BRANDS (marquee) ================= */}
+      <section id="brands" className="scroll-mt-20 border-y bg-muted/40 py-8">
+        <p className="text-center text-xs font-medium tracking-widest text-muted-foreground uppercase">Genuine brands, official warranty</p>
+        <div className="pause-on-hover mask-fade-x mt-5 overflow-hidden">
+          <div className="animate-marquee flex w-max gap-12 pr-12">
+            {[...BRANDS, ...BRANDS].map((b, i) => (
+              <span key={i} className="text-xl font-semibold tracking-tight whitespace-nowrap text-foreground/45 transition-colors hover:text-primary md:text-2xl">{b}</span>
             ))}
           </div>
         </div>
       </section>
 
+      {/* ================= FRAME SHAPES ================= */}
+      <section className="reveal py-16">
+        <div className="mx-auto max-w-6xl px-4">
+          <SectionTitle kicker="Style guide" title="Find frames that suit your face" text="Not sure what to pick? Our stylists match the frame to your face shape. Here’s a quick guide." />
+          <FrameShapes />
+        </div>
+      </section>
+
+      {/* ================= LENS TECH ================= */}
+      <section className="reveal bg-muted/40 py-16">
+        <div className="mx-auto max-w-6xl px-4">
+          <SectionTitle kicker="Lens technology" title="The right lens for how you live" text="Screens, sun, night driving or reading: we fit lenses made for your day." />
+          <LensTech />
+        </div>
+      </section>
+
       {/* ================= HOW IT WORKS ================= */}
-      <section className="py-16">
+      <section className="reveal py-16">
         <div className="mx-auto max-w-6xl px-4">
           <SectionTitle kicker="How it works" title="New glasses in 4 easy steps" />
           <ol className="mt-10 grid gap-4 md:grid-cols-4">
@@ -176,7 +175,7 @@ export default async function HomePage() {
       </section>
 
       {/* ================= STORES ================= */}
-      <section id="stores" className="scroll-mt-20 py-16">
+      <section id="stores" className="reveal scroll-mt-20 py-16">
         <div className="mx-auto max-w-6xl px-4">
           <SectionTitle kicker="Visit us" title={`${stores.length} stores across the city`} text={SITE.hours} />
           <div className="mt-10 grid gap-4 md:grid-cols-3">
